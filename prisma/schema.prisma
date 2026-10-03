@@ -1,0 +1,171 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  fullName  String
+  role      String   @default("OWNER") // OWNER or EMPLOYEE
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Customer {
+  id          String             @id @default(uuid())
+  code        String             @unique // CU-001
+  name        String             @unique
+  phone       String?
+  orders      Order[]
+  receivables ManualReceivable[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model Product {
+  id             String      @id @default(uuid())
+  code           String      @unique // BH-001
+  name           String      @unique
+  sellingPrice   Float       @default(0)
+  minStock       Int         @default(0)
+  currentAvgCost Float       @default(0)
+  isActive       Boolean     @default(true)
+  purchases      Purchase[]
+  orderItems     OrderItem[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model Purchase {
+  id           String               @id @default(uuid())
+  productId    String
+  product      Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplier     String
+  purchaseDate String
+  unitCost     Float
+  qty          Int
+  totalCost    Float
+  payMethod    String               @default("cash") // cash, wallet, deferred
+  payments     PaymentTransaction[]
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+}
+
+model Order {
+  id           String               @id @default(uuid())
+  customerId   String?
+  customer     Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName String
+  customerPhone String?
+  orderDate    String
+  payStatus    String               @default("full") // full, partial, none
+  method       String?              // cash, wallet
+  purchMethod  String?              // cash, wallet (for on-demand supplier purchases)
+  isDelivered  Boolean              @default(false)
+  deliveredAt  DateTime?
+  notes        String?
+  items        OrderItem[]
+  payments     PaymentTransaction[]
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName String
+  qty         Int      @default(1)
+  sellPrice   Float    @default(0)
+  source      String   @default("stock") // stock, supplier
+  shopName    String?
+  costPrice   Float    @default(0) // FROZEN AT TRANSACTION TIME
+  createdAt   DateTime @default(now())
+}
+
+model PaymentTransaction {
+  id          String            @id @default(uuid())
+  amount      Float
+  method      String            // cash, wallet
+  paymentDate String
+  orderId     String?
+  order       Order?            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  purchaseId  String?
+  purchase    Purchase?         @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  manualRecId String?
+  manualRec   ManualReceivable? @relation(fields: [manualRecId], references: [id], onDelete: Cascade)
+  manualPayId String?
+  manualPay   ManualPayable?    @relation(fields: [manualPayId], references: [id], onDelete: Cascade)
+  createdAt   DateTime          @default(now())
+}
+
+model ManualReceivable {
+  id         String               @id @default(uuid())
+  customerId String?
+  customer   Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  name       String
+  amount     Float
+  date       String
+  note       String?
+  payments   PaymentTransaction[]
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+}
+
+model ManualPayable {
+  id        String               @id @default(uuid())
+  name      String
+  amount    Float
+  date      String
+  note      String?
+  payments  PaymentTransaction[]
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+}
+
+model Expense {
+  id        String   @id @default(uuid())
+  date      String
+  amount    Float
+  reason    String
+  method    String   @default("cash") // cash, wallet
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CashLedger {
+  id        String   @id @default(uuid())
+  date      String
+  type      String   // in, out
+  method    String   // cash, wallet
+  amount    Float
+  source    String
+  isAuto    Boolean  @default(false)
+  refType   String?  // order, purchase, expense, manualReceivable, manualPayable, adjustment
+  refId     String?
+  createdAt DateTime @default(now())
+}
+
+model TrashRecord {
+  id        String   @id @default(uuid())
+  type      String   // order, purchase, product, manualReceivable, manualPayable, expense, cash
+  label     String
+  payload   String   // JSON serialized entity and cash snapshot
+  deletedAt String
+  createdAt DateTime @default(now())
+}
+
+model Setting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}

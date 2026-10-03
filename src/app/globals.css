@@ -1,0 +1,67 @@
+@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #FAF7F2;
+  --surface: #FFFFFF;
+  --ink: #2B2620;
+  --muted: #8A7F72;
+  --accent: #A9762F;
+  --accent-dark: #8A5F22;
+  --accent-soft: #F1E6D4;
+  --sage: #5C7A5E;
+  --sage-soft: #E7EFE6;
+  --danger: #B5495B;
+  --danger-soft: #F7E7EA;
+  --border: #E8E1D6;
+  --radius: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: 'Tajawal', system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, .font-heading, button {
+  font-family: 'Cairo', system-ui, sans-serif;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}
